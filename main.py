@@ -1,4 +1,4 @@
-from scrap.jobkorea import scrap_jobkorea
+from jobkorea import scrap_jobkorea
 
 keyword=input("검색할 키워드를 입력하세요: ")
 jobkorea_infos=scrap_jobkorea(keyword)
