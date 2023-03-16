@@ -1,9 +1,35 @@
+from flask import Flask, render_template, request, redirect, send_file
 from jobkorea import scrap_jobkorea
+from file import save_to_file
 
-keyword=input("검색할 키워드를 입력하세요: ")
-jobkorea_infos=scrap_jobkorea(keyword)
-file=open(f"{keyword}.csv","w",encoding="utf-8-sig")
-file.write("company,position,location,experience,education,link\n")
-for jobkorea_info in jobkorea_infos:
-  file.write(f"{jobkorea_info['company']},{jobkorea_info['position']},{jobkorea_info['location']},{jobkorea_info['experience']},{jobkorea_info['education']},{jobkorea_info['link']}\n")
-file.close()
+app = Flask("JobScrapper")
+
+db = {}
+
+@app.route("/")
+def home():
+    return render_template("home.html")
+
+@app.route("/search")
+def search():
+    keyword = request.args.get("keyword")
+    if keyword == None:
+        redirect("/")
+    if keyword in db:
+        jobs = db[keyword]
+    else:
+        jobs = scrap_jobkorea(keyword)
+        db[keyword] = jobs
+    return render_template("search.html", keyword=keyword, jobs=jobs)
+
+@app.route("/export")
+def export():
+    keyword = request.args.get("keyword")
+    if keyword == None:
+        redirect("/")
+    elif keyword not in db:
+        redirect(f"/serch?keyword={keyword}")
+    save_to_file(keyword, db[keyword])
+    return send_file(f"{keyword}.csv", as_attachment=True)
+
+app.run()
